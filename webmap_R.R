@@ -35,7 +35,7 @@ data.empgrw.raw <- readOGR("webmap_data/emp_grw_clean.geojson")
 data.empgrw <- merge(data.empgrw.raw, muni_list, by.x = "ags", by.y = "muni_key")
 data.empgrw$emp_grw_p <- round(data.empgrw$emp_grw_p, 2)
 
-
+# creating custom color palette
 self.palette <- c("#cc99ff","#C2E699", "#78C679", "#31A354","#006837")
 
 
@@ -70,9 +70,12 @@ web.map <- leaflet() %>%
                                                   bringToFront = TRUE,
                                                   fillOpacity = 0.5)) %>% 
   addLegend(position = "bottomright", opacity = 0.9, 
+            title = "Employment Growth </br>(2009 to 2019)",
             labels= c("<0%","0-20%","20-50%","50-100%", ">100%", "No data"), 
             colors = c("#cc99ff","#C2E699", "#78C679", "#31A354","#006837", "#F8F8F8")) %>%
-  %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Basemap - aerial") %>%
+  addProviderTiles(providers$CartoDB.Positron, group = "Basemap - greyscale") %>%
+  addProviderTiles(providers$CartoDB.DarkMatter, group = "Basemap - dark") %>%
   addLayersControl(
     baseGroups = c("Basemap - dark","Basemap - greyscale","Basemap - aerial"),
     options = layersControlOptions(collapsed = TRUE))
