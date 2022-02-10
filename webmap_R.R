@@ -9,7 +9,6 @@ library(rgdal)
 library(readxl)
 library(RColorBrewer)
 
-setwd("Setting-Workind-Directory-Here")
 
 #download List of all German municipalities
 url_muni <- "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugJ/31122020_Auszug_GV.xlsx?__blob=publicationFile"
@@ -35,6 +34,9 @@ data.empgrw.raw <- readOGR("webmap_data/emp_grw_clean.geojson")
 data.empgrw <- merge(data.empgrw.raw, muni_list, by.x = "ags", by.y = "muni_key")
 data.empgrw$emp_grw_p <- round(data.empgrw$emp_grw_p, 2)
 
+# filter for municipalities in NRW
+data.empgrw.NRW <- subset(data.empgrw, str_detect(ags ,"^05"))
+
 
 # creating custom color palette
 self.palette <- c("#cc99ff","#C2E699", "#78C679", "#31A354","#006837")
@@ -43,26 +45,26 @@ self.palette <- c("#cc99ff","#C2E699", "#78C679", "#31A354","#006837")
 data.bins <- c(-62, 0, 20, 50, 100, 880) # based on natural breaks (jenks) from QGIS
 data.pal <- colorBin(palette = self.palette,
                      na.color = "#F8F8F8", # specify NA color
-                     domain = data.empgrw$emp_grw_p, 
+                     domain = data.empgrw.NRW$emp_grw_p, 
                      bins = data.bins)
 
 
 #SPecifiy what should be shown when clicking on municipalityup content
-data.empgrw$popup <- paste("<strong>", data.empgrw$name,"</strong>", "</br>", 
-                           data.empgrw$ags, "</br>", # municipal key
+data.empgrw.NRW$popup <- paste("<strong>", data.empgrw.NRW$name,"</strong>", "</br>", 
+                               data.empgrw.NRW$ags, "</br>", # municipal key
                            "Employment growth in %", 
-                           prettyNum(data.empgrw$emp_grw_p, big.mark = ","))
+                           prettyNum(data.empgrw.NRW$emp_grw_p, big.mark = ","))
 
 # create webmap
 web.map <- leaflet() %>%
   addProviderTiles(providers$CartoDB.Positron) %>% 
-  addPolygons(data = data.empgrw,
+  addPolygons(data = data.empgrw.NRW,
               stroke = TRUE,
               weight = 0.1,
               color = "#ABABAB",
               smoothFactor = 0.3,
               opacity = 0.9, # of stroke
-              fillColor = ~data.pal(data.empgrw$emp_grw_p),
+              fillColor = ~data.pal(data.empgrw.NRW$emp_grw_p),
               fillOpacity = 0.6,
               popup = ~popup,
               highlightOptions = highlightOptions(color = "#E2068A", # hihllighs borders when hovering
